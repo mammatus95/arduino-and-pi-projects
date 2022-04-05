@@ -26,17 +26,24 @@
 #define DHTTYPE DHT11     // Hier wird definiert was für ein Sensor ausgelesen wird. In 
                           // unserem Beispiel möchten wir einen DHT11 auslesen, falls du 
                           // ein DHT22 hast einfach DHT22 eintragen
-#define ADC0 0
+#define ADC0 0            // Analog pin für ntc
+#define ZEROCNK 273.15    // Zero Celsius in Kelvins
+#define MAXANALOGREAD 1023.0
+
+#define T0 298.15         // Nenntemperatur des NTC-Widerstands in K
+#define R0 4700.0         // Nennwiderstand des NTC-Sensors in Ohm
+#define RV 4000.0         // Vorwiderstand in Ohm 
+
 /********************************( Definieren der Objekte )********************************/                          
 DHT dht(DHTPIN, DHTTYPE);
 
-//LiquidCrystal_I2C lcd(0x27,16,2); 
-
 /*global var*/
-int ADC_value;    //resistance
-float hum_dht11, temp_dht11;  //
+int ADC_value;
+float resistance, temp_ntc;
+float hum_dht11, temp_dht11;
 
 int overtempLED=13;
+
 
 /*global funcions*/
 
@@ -48,21 +55,58 @@ void func_overtemp(float temp){
   
 }
 
-float temp_calc(float R){
-  float temp;
+float calc_resistance(float VA_VB){
   /*
-  float B = 4050;  //3500 //3950
-  float RN= 4.7;   //kOhm
-  float TN=298.15; //K
-  float K2C = 273.15;
-  
-  temp=1.0/( (1.0/TN) + (1.0/B)*log(R/RN) );
+  VB : Betriebsspannung des Arduino (irgendwo bei ca. 5V)
+  RV : Vorwiderstand
+  RN : Widerstand des NTC (temperaturabhängig!)
+  VA : Spannung am Arduino-Messeingang
+  VA_VB : Spannungsverhältnis "Spannung am NTC zu Betriebsspannung"
+  Returns:
+  RN = Widerstand des NTC (temperaturabhängig!)
+
+  How:
+  Dann gilt jeweils das Ohmsche Gesetz (U=R*I):
+
+  VA = RN*I
+  VB = (RV+RN)*I |Gleichungen dividieren
+
+  VA/VB= (RN*I)/((RV+RN)*I) |I kürzen
+
+  VA/VB= RN/(RV+RN) |*(RV+RN)
+
+  VA/VB*(RV+RN)= RN |weiter umformen
+
+  RV*VA/VB + RN*VA/VB = RN
+
+  RV*VA/VB = RN - RN*VA/VB
+
+  RV*VA/VB = RN*(1-VA/VB) |:(1-VA/VB)
+ 
+  RN= RV*VA/VB / (1-VA/VB) ==> Formel für den Widerstand des NTC-Widerstands!
+
   */
-  float cal=6.8, offset=296;
-  temp = (R-offset)/cal;
-  
-  return temp;// - K2C;
+  float RN = RV*VA_VB / (1-VA_VB); // aktueller Widerstand des NTC
+  return RN;
 }
+
+float temperature_NTCB(float B, float RN){
+  /*
+  Ermittlung der Temperatur mittels NTC-Widerstand
+  Version der Funktion bei gegebener Materialkonstante B
+  Erklärung der Parameter:
+  RN : Widerstand des NTC (temperaturabhängig!)
+  T0 : Nenntemperatur des NTC-Widerstands in K
+  R0 : Nennwiderstand des NTC-Sensors in Ohm
+  B  : Materialkonstante B
+  Returs:
+  -------
+  Rückgabewert : Temperatur in C
+  */
+ 
+  return (T0 * B) / (B + T0 * log(RN / R0)) -ZEROCNK;
+}
+
 
 
 void setup() {
@@ -83,21 +127,18 @@ void loop() {
   hum_dht11 = dht.readHumidity();     // Lesen der Luftfeuchtigkeit und speichern in die Variable h
   temp_dht11 = dht.readTemperature(); // Lesen der Temperatur in °C und speichern in die Variable t
   ADC_value = analogRead(ADC0);
+  resistance = calc_resistance(ADC_value/MAXANALOGREAD); // Calculate resistance
   
-/*********************( Überprüfen ob alles richtig Ausgelesen wurde )*********************/
-  /*if (isnan(hum_dht11) || isnan(temp_dht11) || isnan(ADC_value) || ADC_value == 0) {       
-    Serial.println("Fehler beim auslesen des Sensors!");
-    return;
-  }*/
+  temp_ntc=temperature_NTCB(4050, resistance);
 
   // Nun senden wir die gemessenen Werte an den PC dise werden wir im Seriellem Monitor sehen
     Serial.print(hum_dht11);                   // Ausgeben der Luftfeuchtigkeit
     Serial.print(";");              
     Serial.print(temp_dht11);                  // Ausgeben der Temperatur
     Serial.print(";");
-    Serial.print(ADC_value);
+    Serial.print(resistance);
     Serial.print(";");              
-    Serial.print(temp_calc(ADC_value));
+    Serial.print(temp_ntc);
     Serial.println(";");
-    func_overtemp(temp_calc(ADC_value));
+    func_overtemp(temp_ntc);
 }
