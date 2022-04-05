@@ -67,18 +67,9 @@ float temp_calc(float R){
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("DHT11 & NHC 4k7 Testprogramm");
+  //Serial.println("DHT11 & NHC 4k7 Testprogramm");
   dht.begin();
   pinMode(overtempLED, OUTPUT);
-  /*init display*//*
-  //lcd.begin();
-  lcd.init();
-
-  lcd.backlight();
-  lcd.setCursor(1,0);
-  lcd.print("hello everyone");
-  //lcd.blink();
-  */
 }
 
 void loop() {
@@ -109,29 +100,4 @@ void loop() {
     Serial.print(temp_calc(ADC_value));
     Serial.println(";");
     func_overtemp(temp_calc(ADC_value));
-  /*
-  Serial.print("Luftfeuchtigkeit: ");
-  Serial.print(hum_dht11);                  // Ausgeben der Luftfeuchtigkeit
-  Serial.print("%\t");              // Tabulator
-  Serial.print("Temperatur: ");
-  Serial.print(temp_dht11);                  // Ausgeben der Temperatur
-  Serial.print("C");
-  Serial.print("\t");              // Tabulator
-  Serial.print("Resistance:");
-  Serial.print(ADC_value);
-  Serial.print("\t");              // Tabulator
-  Serial.print(" Temp = ");
-  Serial.print(temp_calc(ADC_value));
-  Serial.println("C");
-  func_overtemp(temp_calc(ADC_value));
-  */
-  /*
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Temperatur messen");
-  lcd.setCursor(0,1);
-  lcd.print("Temperatur: ");
-  lcd.print(temp_dht11);
-  lcd.print("\337C");
-  */
 }
