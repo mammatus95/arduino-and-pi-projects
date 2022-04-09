@@ -29,7 +29,6 @@ def pick_data(line_string,time_stamp):
     dht11_temp.append(float(data[1]))
     resistance.append(float(data[2]))
     temp_r.append(float(data[3]))
-    date_stamp.append(time_stamp)
     print(float(data[1]),";",data[0],";",data[2],";",data[3],";",time_stamp)
 
 def create_plot(dht11_temp,temp_r1,date_stamp):
@@ -37,7 +36,7 @@ def create_plot(dht11_temp,temp_r1,date_stamp):
     ax = fig.add_subplot(111)
     
     ax.plot(date_stamp,dht11_temp,'b-',label="Temp DHT11")
-    ax.plot(date_stamp,temp_r1,'r-',label="Temp NTC 4k7 calc1")
+    ax.plot(date_stamp,temp_r1,'r-',label="Temp NTC 4k7")
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%m.%d %H:%M'))
     if len(date_stamp) < 100:
         ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=1))
@@ -48,13 +47,46 @@ def create_plot(dht11_temp,temp_r1,date_stamp):
     else:
         ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=10))
         ax.tick_params(axis='x', labelrotation=45)
+    plt.title("Temepraturmessung " + now.strftime("%d.%m.%Y"))
     plt.legend()
     plt.savefig("messdaten_" + now.strftime("%d.%m.%Y") + ".png")
     plt.close()
+    
+    """
+    # Create some mock data
+    t = np.arange(0.01, 10.0, 0.01)
+    data1 = dht11_temp.to_numpy()
+    data2 = np.sin(2 * np.pi * t)
+
+    fig, ax1 = plt.subplots()
+
+    color = 'tab:red'
+    ax1.set_xlabel('time (s)')
+    ax1.set_ylabel('exp', color=color)
+    ax1.plot(t, data1, color=color)
+    ax1.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+    color = 'tab:blue'
+    ax2.set_ylabel('sin', color=color)  # we already handled the x-label with ax1
+    ax2.plot(t, data2, color=color)
+    ax2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    plt.savefig("messdaten_" + now.strftime("%d.%m.%Y") + ".png")
+    plt.close()
+    """
+
+port ='/dev/ttyACM0'
+speed=9600
+fd_log = open("logfile.log", "w")
 
 # adapt name (baud rate has to be the same than in the arduino sketch)
-s = serial.Serial('/dev/ttyACM0', 9600)
+s = serial.Serial(port, speed)
+fd_log.write("Open port for serial interface {} with a speed of {} Bit/s\n".format(port,speed) )
 #s.open() not needed anymore
+
 # Arduino resets after a serial connection
 time.sleep(5)
 
@@ -63,20 +95,29 @@ try:
     while True:
         if (i % 5) == 0:
             s.close()
-            s = serial.Serial('/dev/ttyACM0', 9600)
+            s = serial.Serial(port, speed)
             create_plot(dht11_temp,temp_r,date_stamp)
         time.sleep(5)
-        response = s.readline()
-        now = datetime.today()
-        try:
-            pick_data(response,now)
-        except:
-            print(response)
-            pass
         
-        i+=1
+        response = s.readline()
+        if len(response) >= 27: #28
+            now = datetime.today()
+            try:
+                pick_data(response,now)
+                date_stamp.append(now)
+            except Exception as e:
+                fd_log.write("{} ERROR : {}\n".format(now.strftime("%Y.%m.%d %H:%M"),e) )
+                fd_log.write("{} \n\n".format(response))
+                pass
+            
+            i+=1
 except KeyboardInterrupt:
+    fd_log.write("{} ERROR : KeyboardInterrupt\n".format(now.strftime("%Y.%m.%d %H:%M")) )
     s.close()
-except:
-    print(response)
+    fd_log.close()
+except Exception as e:
+    fd_log.write("{} ERROR : {}\n".format(now.strftime("%Y.%m.%d %H:%M"),e) )
+    fd_log.close()
     s.close()
+
+fd_log.close()
