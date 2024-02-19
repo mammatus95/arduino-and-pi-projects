@@ -1,7 +1,9 @@
 name: Arduino CI
 
-on: [push]
-
+on: 
+  push:
+    branches:
+      - test
 jobs:
   runTest:
     runs-on: ubuntu-latest
