@@ -5,7 +5,10 @@
 ```bash
 sudo snap install arduino
 ```
-
+Run this command, as well:
+```bash
+sudo usermod -a -G dialout $USER
+```
 ## Programming with Arduino IDE
 
 - Select Your Board: Go to `Tools > Board` and select the Arduino board model you are using.
@@ -36,6 +39,7 @@ void loop() {
 - Upload Your Sketch
 - Open the Serial Monitor (Optional)
 
+Take look on the led subfolder for more details about the circuit.
 
 ## Install Raspberry Pi OS
 

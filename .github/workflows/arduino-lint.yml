@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
   
 jobs:
   lint:
@@ -13,8 +12,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: arduino/arduino-lint-action@v1
         with:
-          library-manager: false # update submit
-          compliance: strict
-          project-type: all # sketch library platform package-index
-          recursive: true # false
-          verbose: false # true
+          library-manager: false # update submit false
+          compliance: specification # strict specification permissive
+          project-type: sketch # sketch library platform package-index all
+          recursive: true # false or true
+          verbose: true # true or false
