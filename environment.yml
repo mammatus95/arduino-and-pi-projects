@@ -1,0 +1,9 @@
+name: pipy
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy=1.26.3
+  - pyserial=3.5
+  - matplotlib=3.8.1
+  - seaborn=0.13.1

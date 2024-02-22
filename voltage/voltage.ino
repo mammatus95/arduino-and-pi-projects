@@ -1,4 +1,5 @@
-#define SENSOR_PIN A0
+// define PINs
+#define SENSOR_PIN        A0
 #define OPERATING_VOLTAGE 5.0f
 const float R1 = 30000.0f; // resistance one as port of the sensor
 const float R2 = 7500.0f;  // resistance two as part of the sensor

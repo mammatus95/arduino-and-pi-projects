@@ -33,19 +33,20 @@ void loop(){
 
 **Calculation**
 
-$ U=R*I $
+$$ U=R*I $$
 
 Total resistance of an circuit:
 
-$ R = R1 + R2 $
+$R = R1 + R2$
 
-$ I = I1 = I2 $
+$I = I1 = I2$
 
-$ U = (R1 + R2) * I $
-$ I = U2 / R2 $
+$U = (R1 + R2) * I$
 
-$ U = (R1 + R2) * U2 / R2 $
+$I = U2 / R2$
 
-$ U = (U2 * (R1 + R2)) / R2 $
+$U = (R1 + R2) * U2 / R2$
+
+$$ U = (U2 * (R1 + R2)) / R2 $$
 
 ![Circuit](circuit/voltageseperator.png)
