@@ -11,32 +11,35 @@ resistance = []
 temp_r     = []
 date_stamp = []
 
+
 def calc_ntc2(RT):
-    TR = 298.15 #K #reference temperature 25°C
-    RR = 4700 #Ohm #reference resistance
-    B = 3500  #3500 //3950
+    TR = 298.15  # K #reference temperature 25°C
+    RR = 4700  # Ohm #reference resistance
+    B = 3500   # 3500 //3950
     # 4050 temp changes are to low
-    RT *= 10 #convert to Ohm
+    RT *= 10  # convert to Ohm
 
     temp = TR/(1-(TR/B)*np.log(RR/RT))
     return temp - 273.15
 
-def pick_data(line_string,time_stamp):
-    line_string = str(line_string).replace("\\r\\n'","").replace("b'","")
-    #print(line_string)
+
+def pick_data(line_string, time_stamp):
+    line_string = str(line_string).replace("\\r\\n'", "").replace("b'", "")
+    # print(line_string)
     data = line_string.split(";")
     dht11_hum.append(float(data[0]))
     dht11_temp.append(float(data[1]))
     resistance.append(float(data[2]))
     temp_r.append(float(data[3]))
-    print(float(data[1]),";",data[0],";",data[2],";",data[3],";",time_stamp)
+    print(float(data[1]), ";", data[0], ";", data[2], ";", data[3], ";", time_stamp)
 
-def create_plot(dht11_temp,temp_r1,date_stamp):
+
+def create_plot(dht11_temp, temp_r1, date_stamp):
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    
-    ax.plot(date_stamp,dht11_temp,'b-',label="Temp DHT11")
-    ax.plot(date_stamp,temp_r1,'r-',label="Temp NTC 4k7")
+
+    ax.plot(date_stamp, dht11_temp, 'b-', label="Temp DHT11")
+    ax.plot(date_stamp, temp_r1, 'r-', label="Temp NTC 4k7")
     ax.xaxis.set_major_formatter(mdates.DateFormatter('%m.%d %H:%M'))
     if len(date_stamp) < 100:
         ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=1))
@@ -78,14 +81,15 @@ def create_plot(dht11_temp,temp_r1,date_stamp):
     plt.close()
     """
 
+
 port ='/dev/ttyACM0'
 speed=9600
 fd_log = open("logfile.log", "w")
 
 # adapt name (baud rate has to be the same than in the arduino sketch)
 s = serial.Serial(port, speed)
-fd_log.write("Open port for serial interface {} with a speed of {} Bit/s\n".format(port,speed) )
-#s.open() not needed anymore
+fd_log.write("Open port for serial interface {} with a speed of {} Bit/s\n".format(port, speed) )
+# s.open() not needed anymore
 
 # Arduino resets after a serial connection
 time.sleep(5)
@@ -96,27 +100,26 @@ try:
         if (i % 5) == 0:
             s.close()
             s = serial.Serial(port, speed)
-            create_plot(dht11_temp,temp_r,date_stamp)
+            create_plot(dht11_temp, temp_r, date_stamp)
         time.sleep(5)
-        
+
         response = s.readline()
         if len(response) >= 27: #28
             now = datetime.today()
             try:
-                pick_data(response,now)
+                pick_data(response, now)
                 date_stamp.append(now)
             except Exception as e:
-                fd_log.write("{} ERROR : {}\n".format(now.strftime("%Y.%m.%d %H:%M"),e) )
+                fd_log.write("{} ERROR : {}\n".format(now.strftime("%Y.%m.%d %H:%M"), e) )
                 fd_log.write("{} \n\n".format(response))
                 pass
-            
             i+=1
 except KeyboardInterrupt:
     fd_log.write("{} ERROR : KeyboardInterrupt\n".format(now.strftime("%Y.%m.%d %H:%M")) )
     s.close()
     fd_log.close()
 except Exception as e:
-    fd_log.write("{} ERROR : {}\n".format(now.strftime("%Y.%m.%d %H:%M"),e) )
+    fd_log.write("{} ERROR : {}\n".format(now.strftime("%Y.%m.%d %H:%M"), e) )
     fd_log.close()
     s.close()
 
